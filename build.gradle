@@ -1,0 +1,61 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'com.therdnotes'
+version = '0.1.0-SNAPSHOT'
+description = 'Spring config framework for pagination and sorting on REST endpoints.'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withJavadocJar()
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Optional: only if you rely on Spring Web features
+    compileOnly 'org.springframework.boot:spring-boot-starter-web:3.2.0'
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            pom {
+                name = 'spring-page-sort-endpoints'
+                description = 'Spring config framework for pagination and sorting on REST endpoints.'
+                url = 'https://github.com/raevilman/spring-page-sort-endpoints'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'raevilman'
+                        name = 'Raman'
+                        email = 'hello@therdnotes.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/raevilman/spring-page-sort-endpoints.git'
+                    developerConnection = 'scm:git:ssh://github.com:raevilman/spring-page-sort-endpoints.git'
+                    url = 'https://github.com/raevilman/spring-page-sort-endpoints'
+                }
+            }
+        }
+    }
+}
