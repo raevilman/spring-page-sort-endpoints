@@ -16,7 +16,6 @@ import java.util.Set;
  * Represents a request for paginated and sorted data.
  * This class encapsulates pagination and sorting parameters for API requests.
  * It provides default values and validation for the parameters.
- *
  * </p>
  *
  * @param page    The page number (0-based).
