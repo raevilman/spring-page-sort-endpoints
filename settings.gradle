@@ -1,1 +1,3 @@
 rootProject.name = 'spring-page-sort-endpoints'
+include 'lib'
+include 'tester'
