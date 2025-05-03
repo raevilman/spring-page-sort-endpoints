@@ -1,4 +1,143 @@
 plugins {
-    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'org.jreleaser' version '1.18.0'
+    id 'org.springframework.boot' version '3.4.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.github.ben-manes.versions' version '0.52.0'
+}
+
+group = 'com.therdnotes'
+version = '0.1.0-SNAPSHOT'
+description = 'Spring config framework for pagination and sorting on REST endpoints.'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    withJavadocJar()
+    withSourcesJar()
+}
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
+
+    // Lombok for main code
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Spring Boot dependencies
+    compileOnly 'org.springframework.boot:spring-boot-starter-web'
+
+    // Logging
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'ch.qos.logback:logback-classic'
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+    // Lombok for tests
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // Testing
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Web support (MockMvc uses Spring Web)
+    testImplementation 'org.springframework.boot:spring-boot-starter-web'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jreleaser {
+    environment {
+        variables = '/Users/rd/.jreleaser/config.yml'
+    }
+    gitRootSearch = true
+    signing {
+        active = 'ALWAYS'
+        armored = true
+        verify = true
+    }
+    release {
+        github {
+            enabled = true
+            skipRelease = true
+        }
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                'release-deploy' {
+                    active = 'RELEASE'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
+                }
+            }
+            nexus2 {
+                'snapshot-deploy' {
+                    active = 'SNAPSHOT'
+                    url = 'https://central.sonatype.com/repository/maven-snapshots'
+                    snapshotUrl = 'https://central.sonatype.com/repository/maven-snapshots'
+                    applyMavenCentralRules = true
+                    snapshotSupported = true
+                    closeRepository = true
+                    releaseRepository = false
+                    stagingRepository('build/staging-deploy')
+                }
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            pom {
+                name = 'spring-page-sort-endpoints'
+                description = 'Spring config framework for pagination and sorting on REST endpoints.'
+                url = 'https://github.com/raevilman/spring-page-sort-endpoints'
+                inceptionYear = '2025'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/licenses/MIT'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'raevilman'
+                        name = 'raman'
+                        email = 'hello@therdnotes.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/raevilman/spring-page-sort-endpoints.git'
+                    developerConnection = 'scm:git:ssh://github.com:raevilman/spring-page-sort-endpoints.git'
+                    url = 'https://github.com/raevilman/spring-page-sort-endpoints'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir('staging-deploy')
+        }
+    }
 }
 
