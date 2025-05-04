@@ -11,6 +11,15 @@ import javax.tools.Diagnostic;
 import java.util.Arrays;
 import java.util.Set;
 
+
+/**
+ * Annotation processor for {@link PageSortConfig}.
+ * <p>
+ * This processor validates the configuration of the {@link PageSortConfig} annotation
+ * at compile time. It ensures that the `defaultSortBy` field, if specified, is one of
+ * the `validSortFields`. Additionally, it provides a note if `validSortFields` are
+ * configured but `defaultSortBy` is not set.
+ */
 @SupportedAnnotationTypes("com.therdnotes.springpagesort.PageSortConfig")
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 public class PageSortConfigProcessor extends AbstractProcessor {
