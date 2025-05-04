@@ -8,11 +8,13 @@ plugins {
 }
 
 group = 'com.therdnotes'
-version = '0.1.0'
+version = '0.1.1'
 description = 'Spring config framework for pagination and sorting on REST endpoints.'
 
 java {
     toolchain {
+        // ALSO UPDATE THE VERSION HERE   ---->   com.therdnotes.springpagesort.PageSortConfigProcessor
+        // AND IN THE README.md
         languageVersion = JavaLanguageVersion.of(17)
     }
     withJavadocJar()
@@ -33,6 +35,9 @@ repositories {
 
 dependencies {
     annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
+
+    // Needed for annotation processor
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
 
     // Lombok for main code
     compileOnly 'org.projectlombok:lombok'
@@ -56,6 +61,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     // Web support (MockMvc uses Spring Web)
     testImplementation 'org.springframework.boot:spring-boot-starter-web'
+    // Compile testing, for testing annotations processors
+    testImplementation 'com.google.testing.compile:compile-testing:0.21.0'
 }
 
 test {

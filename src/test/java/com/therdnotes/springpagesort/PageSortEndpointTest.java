@@ -138,6 +138,64 @@ public class PageSortEndpointTest {
     }
 
     @Test
+    void noSortEndpointShouldRejectSorting() throws Exception {
+        mockMvc.perform(get("/items/no-sort?sortBy=name"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Sorting is not allowed for this resource"));
+    }
+
+    @Test
+    void noSortEndpointShouldAcceptPagination() throws Exception {
+        mockMvc.perform(get("/items/no-sort?page=1&size=5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.sortBy").doesNotExist());
+    }
+
+    @Test
+    void invalidSortEndpointShouldFailValidation() throws Exception {
+        mockMvc.perform(get("/items/invalid-sort"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Invalid sort field: invalid. Valid options are: name, days"));
+    }
+
+    @Test
+    void defaultSortByTest() throws Exception {
+        mockMvc.perform(get("/items/default-sort"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(12))
+                .andExpect(jsonPath("$.sortBy").value("name"))
+                .andExpect(jsonPath("$.sortDir").value("asc"));
+    }
+
+    @Test
+    void defaultSortByIsOverriddenByRequestParam() throws Exception {
+        // Tests that an explicit sortBy parameter overrides the defaultSortBy value
+        mockMvc.perform(get("/items/default-sort?sortBy=days"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sortBy").value("days"));
+    }
+
+    @Test
+    void emptyRequestParamDoesNotOverrideDefaultSortBy() throws Exception {
+        // Tests that an empty sortBy parameter doesn't override defaultSortBy
+        mockMvc.perform(get("/items/default-sort?sortBy="))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sortBy").value("name"));
+    }
+
+    @Test
+    void defaultSortByCanBeUsedWithCustomSortDir() throws Exception {
+        // Tests that defaultSortBy works with a custom sort direction
+        mockMvc.perform(get("/items/default-sort?sortDir=desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sortBy").value("name"))
+                .andExpect(jsonPath("$.sortDir").value("desc"));
+    }
+
+    @Test
     void parameterOrderShouldNotMatter() throws Exception {
         mockMvc.perform(get("/items?sortDir=desc&size=5&sortBy=days&page=1"))
                 .andExpect(status().isOk())
@@ -153,4 +211,6 @@ public class PageSortEndpointTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.page").value(1));
     }
+
+
 }

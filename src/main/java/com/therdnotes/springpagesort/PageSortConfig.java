@@ -74,4 +74,12 @@ public @interface PageSortConfig {
      * @return array of valid sort field names (default: empty array)
      */
     String[] validSortFields() default {};
+
+    /**
+     * Default sort field to use when not specified in the request.
+     * The value must be one of the fields specified in {@code validSortFields}.
+     *
+     * @return default sort field
+     */
+    String defaultSortBy() default "";
 }
