@@ -3,6 +3,7 @@ package com.therdnotes.springpagesort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -73,9 +74,9 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
      * annotation (if present), and creates a {@link PageSortRequest} object with the
      * extracted and validated values.
      *
-     * @param parameter the method parameter to resolve
-     * @param mavContainer the ModelAndViewContainer for the current request
-     * @param webRequest the current request
+     * @param parameter     the method parameter to resolve
+     * @param mavContainer  the ModelAndViewContainer for the current request
+     * @param webRequest    the current request
      * @param binderFactory the factory to create data binders
      * @return a {@link PageSortRequest} object populated with validated pagination and sorting parameters
      * @throws PageSortValidationException if validation of any parameter fails
@@ -92,10 +93,11 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
 
         if (pageSortConfig != null) {
             log.debug("Found @PageSortConfig annotation on method: {}", method.getName());
-            log.trace("PageSortConfig values: defaultPage={}, defaultSize={}, minPage={}, minSize={}, maxSize={}, validSortFields={}",
+            log.trace("PageSortConfig values: defaultPage={}, defaultSize={}, minPage={}, minSize={}, maxSize={}, defaultSortBy={}, validSortFields={}",
                     pageSortConfig.defaultPage(), pageSortConfig.defaultSize(),
                     pageSortConfig.minPage(), pageSortConfig.minSize(),
-                    pageSortConfig.maxSize(), Arrays.toString(pageSortConfig.validSortFields()));
+                    pageSortConfig.maxSize(), pageSortConfig.defaultSortBy(),
+                    Arrays.toString(pageSortConfig.validSortFields()));
         } else {
             log.debug("No @PageSortConfig annotation found, using default values");
         }
@@ -103,8 +105,10 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
         // Default values
         int defaultPage = pageSortConfig != null ? pageSortConfig.defaultPage() : 0;
         int defaultSize = pageSortConfig != null ? pageSortConfig.defaultSize() : 25;
+        String defaultSortBy = pageSortConfig != null ? pageSortConfig.defaultSortBy() : null;
 
-        log.debug("Using defaults: defaultPage={}, defaultSize={}", defaultPage, defaultSize);
+        log.debug("Using defaults: defaultPage={}, defaultSize={}, defaultSortBy={}",
+                defaultPage, defaultSize, defaultSortBy);
 
         // Parse request parameters
         String pageParam = webRequest.getParameter("page");
@@ -117,6 +121,12 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
 
         int page = defaultPage;
         int size = defaultSize;
+
+        // Apply defaultSortBy when sortByParam is not provided
+        if (!StringUtils.hasText(sortByParam) && StringUtils.hasText(defaultSortBy)) {
+            sortByParam = defaultSortBy;
+            log.debug("Using default sort field: {}", sortByParam);
+        }
 
         try {
             if (pageParam != null && !pageParam.isEmpty()) {
@@ -162,7 +172,7 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
     /**
      * Validates that the page number is not less than the minimum allowed value.
      *
-     * @param page the page number to validate
+     * @param page    the page number to validate
      * @param minPage the minimum allowed page number
      * @throws PageSortValidationException if the page number is less than the minimum
      */
@@ -177,7 +187,7 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
     /**
      * Validates that the page size is within the allowed range.
      *
-     * @param size the page size to validate
+     * @param size    the page size to validate
      * @param minSize the minimum allowed page size
      * @param maxSize the maximum allowed page size
      * @throws PageSortValidationException if the page size is outside the allowed range
@@ -200,7 +210,7 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
      * If the validSortFields array is empty, no sorting is allowed.
      * If the validSortFields array is not empty, the sortBy parameter must be one of the allowed values.
      *
-     * @param sortBy the sort field to validate
+     * @param sortBy          the sort field to validate
      * @param validSortFields array of allowed sort fields
      * @throws PageSortValidationException if sorting is not allowed or the sort field is invalid
      */

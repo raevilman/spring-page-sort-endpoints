@@ -88,10 +88,61 @@ When validation fails, a `400 Bad Request` response is returned with a descripti
 - Parameter order independence
 - Comprehensive logging
 
-## Requirements
+---
 
-- Spring Boot 3.4.3+
-- Java 17+
+# Using the Annotation Processor
+
+This annotation processor validates your `@PageSortConfig` configuration at compile time to ensure proper setup of pagination and sorting parameters.
+
+## How It Works
+
+The processor checks that your `@PageSortConfig` annotation is correctly configured by validating:
+- If `defaultSortBy` is specified, it must be one of the `validSortFields`
+- Notifies when `validSortFields` are specified but `defaultSortBy` isn't set
+
+## Setup in Your Project
+
+Add the library to your project:
+
+```gradle
+dependencies {
+    implementation 'com.therdnotes:spring-page-sort-endpoints:0.1.1-SNAPSHOT'
+    
+    // Important: Enable annotation processing
+    annotationProcessor 'com.therdnotes:spring-page-sort-endpoints:0.1.1-SNAPSHOT'
+}
+```
+
+## Usage
+
+Apply the annotation to your REST controller methods:
+
+```java
+@RestController
+@RequestMapping("/items")
+public class ItemsController {
+    @GetMapping
+    @PageSortConfig(
+        defaultSize = 10,
+        maxSize = 50,
+        validSortFields = {"title", "createdAt", "price"},
+        defaultSortBy = "createdAt"
+    )
+    public ResponseEntity<Page<Item>> getItems(PageSortRequest pageSortRequest) {
+        // Implementation
+    }
+}
+```
+
+## Compiler Feedback
+
+The processor will catch issues during compilation:
+- Error: `defaultSortBy must be one of the validSortFields`
+- Note: Suggestion to specify `defaultSortBy` when `validSortFields` is defined
+
+This helps you catch configuration issues early, without runtime errors.
+
+---
 
 ## Exception Handling
 
@@ -124,3 +175,12 @@ public class YourExceptionHandler {
     }
 }
 ```
+
+---
+## Requirements
+
+- **Library Usage**: Requires Java 17+
+- **Annotation Processor**: Compatible with Java 17+
+- **Spring Boot**: Works with Spring Boot 3.x+
+
+The annotation processor is compatible with all Java versions 17 and newer, including future releases.
