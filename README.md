@@ -7,7 +7,7 @@ A lightweight library for standardized pagination and sorting in Spring Boot RES
 Add the dependency to your project:
 
 ```gradle
-implementation 'com.therdnotes:spring-page-sort-endpoints:0.1.0'
+implementation 'com.therdnotes:spring-page-sort-endpoints:0.1.2'
 ```
 
 ## Basic Usage
@@ -23,8 +23,8 @@ public class ItemController {
     @PageSortConfig
     public Map<String, Object> getItems(PageSortRequest pageSortRequest) {
         // Access pagination params with:
-        int page = pageSortRequest.page();     // Default: 0
-        int size = pageSortRequest.size();     // Default: 25
+        int offset = pageSortRequest.offset();     // Default: 0
+        int limit = pageSortRequest.limit();       // Default: 25
         String sortBy = pageSortRequest.sortBy();
         String sortDir = pageSortRequest.sortDir(); // Default: "asc"
         
@@ -32,8 +32,8 @@ public class ItemController {
         // ...
         
         return Map.of(
-            "page", page,
-            "size", size,
+            "offset", offset,
+            "limit", limit,
             "sortBy", sortBy,
             "sortDir", sortDir
         );
@@ -48,11 +48,11 @@ Apply the `@PageSortConfig` annotation to customize validation:
 ```java
 @GetMapping("/products")
 @PageSortConfig(
-    defaultPage = 0,
-    defaultSize = 10,
-    minPage = 0,
-    minSize = 1,
-    maxSize = 50,
+    defaultOffset = 0,
+    defaultLimit = 10,
+    minOffset = 0,
+    minLimit = 1,
+    maxLimit = 50,
     validSortFields = {"name", "price", "date"}
 )
 public Page<Product> getProducts(PageSortRequest pageSortRequest) {
@@ -65,16 +65,16 @@ public Page<Product> getProducts(PageSortRequest pageSortRequest) {
 These query parameters are automatically parsed:
 
 ```
-GET /items?page=2&size=10
+GET /items?offset=20&limit=10
 GET /items?sortBy=name&sortDir=desc
-GET /items?page=0&size=5&sortBy=date&sortDir=asc
+GET /items?offset=0&limit=5&sortBy=date&sortDir=asc
 ```
 
 ## Validation
 
 The library automatically validates all parameters:
-- Invalid page numbers (negative values)
-- Invalid page sizes (too small or too large)
+- Invalid offset values (negative values)
+- Invalid limit values (too small or too large)
 - Invalid sort fields (if validSortFields is specified)
 - Invalid sort directions (only "asc" or "desc" allowed)
 
@@ -82,7 +82,7 @@ When validation fails, a `400 Bad Request` response is returned with a descripti
 
 ## Features
 
-- Sensible defaults (page=0, size=25, sortDir=asc)
+- Sensible defaults (offset=0, limit=25, sortDir=asc)
 - Case-insensitive sort direction handling
 - Consistent error responses
 - Parameter order independence
@@ -106,10 +106,10 @@ Add the library to your project:
 
 ```gradle
 dependencies {
-    implementation 'com.therdnotes:spring-page-sort-endpoints:0.1.1-SNAPSHOT'
+    implementation 'com.therdnotes:spring-page-sort-endpoints:0.1.2'
     
     // Important: Enable annotation processing
-    annotationProcessor 'com.therdnotes:spring-page-sort-endpoints:0.1.1-SNAPSHOT'
+    annotationProcessor 'com.therdnotes:spring-page-sort-endpoints:0.1.2'
 }
 ```
 
@@ -123,8 +123,8 @@ Apply the annotation to your REST controller methods:
 public class ItemsController {
     @GetMapping
     @PageSortConfig(
-        defaultSize = 10,
-        maxSize = 50,
+        defaultLimit = 10,
+        maxLimit = 50,
         validSortFields = {"title", "createdAt", "price"},
         defaultSortBy = "createdAt"
     )
@@ -146,7 +146,7 @@ This helps you catch configuration issues early, without runtime errors.
 
 ## Exception Handling
 
-The library throws `PageSortValidationException` when validation of page/sort parameters fails. You have several options for handling these exceptions:
+The library throws `PageSortValidationException` when validation of offset/sort parameters fails. You have several options for handling these exceptions:
 1. **Use the built-in exception handler**: The library provides a default exception handler that converts `PageSortValidationException` to HTTP 400 Bad Request responses.
 2. **Create a custom exception handler**: You can create your own exception handler to customize the response structure and status code.
 
