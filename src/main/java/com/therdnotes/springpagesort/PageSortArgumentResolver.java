@@ -93,16 +93,19 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
 
         if (pageSortConfig != null) {
             log.debug("Found @PageSortConfig annotation on method: {}", method.getName());
+
             log.trace("PageSortConfig values: defaultOffset={}, defaultLimit={}, minOffset={}, minLimit={}, maxLimit={}, defaultSortBy={}, validSortFields={}",
                     pageSortConfig.defaultOffset(), pageSortConfig.defaultLimit(),
                     pageSortConfig.minOffset(), pageSortConfig.minLimit(),
                     pageSortConfig.maxLimit(), pageSortConfig.defaultSortBy(),
+
                     Arrays.toString(pageSortConfig.validSortFields()));
         } else {
             log.debug("No @PageSortConfig annotation found, using default values");
         }
 
         // Default values
+
         int defaultOffset = pageSortConfig != null ? pageSortConfig.defaultOffset() : 0;
         int defaultLimit = pageSortConfig != null ? pageSortConfig.defaultLimit() : 25;
         String defaultSortBy = pageSortConfig != null ? pageSortConfig.defaultSortBy() : null;
@@ -126,6 +129,12 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
         if (!StringUtils.hasText(sortBy) && StringUtils.hasText(defaultSortBy)) {
             sortBy = defaultSortBy;
             log.debug("Using default sort field: {}", sortBy);
+        }
+
+        // Apply defaultSortBy when sortByParam is not provided
+        if (!StringUtils.hasText(sortByParam) && StringUtils.hasText(defaultSortBy)) {
+            sortByParam = defaultSortBy;
+            log.debug("Using default sort field: {}", sortByParam);
         }
 
         try {
@@ -172,9 +181,11 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
     /**
      * Validates that the offset is not less than the minimum allowed value.
      *
+
      * @param offset    the offset to validate
      * @param minOffset the minimum allowed offset
      * @throws PageSortValidationException if the offset is less than the minimum
+
      */
     private void validateOffset(int offset, int minOffset) {
         log.trace("Validating offset={} against minOffset={}", offset, minOffset);
