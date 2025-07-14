@@ -13,8 +13,8 @@ public class TestController {
 
     @GetMapping
     @PageSortConfig(
-            defaultSize = 12,
-            maxSize = 12,
+            defaultLimit = 12,
+            maxLimit = 12,
             validSortFields = {"name", "days"}
     )
     public ResponseEntity<PageSortRequest> getPageRequest(PageSortRequest pageSortRequest) {
@@ -25,8 +25,8 @@ public class TestController {
 
     @GetMapping("/default-sort")
     @PageSortConfig(
-            defaultSize = 12,
-            maxSize = 12,
+            defaultLimit = 12,
+            maxLimit = 12,
             validSortFields = {"name", "days"},
             defaultSortBy = "name" // This sets a default sort field
     )
@@ -37,8 +37,8 @@ public class TestController {
 
     @GetMapping("/no-sort")
     @PageSortConfig(
-            defaultSize = 12,
-            maxSize = 12
+            defaultLimit = 12,
+            maxLimit = 12
     )
     public ResponseEntity<PageSortRequest> getPageRequestNoSort(PageSortRequest pageSortRequest) {
         logPageRequest(pageSortRequest);
@@ -48,8 +48,8 @@ public class TestController {
 
     @GetMapping("/invalid-sort")
     @PageSortConfig(
-            defaultSize = 12,
-            maxSize = 12,
+            defaultLimit = 12,
+            maxLimit = 12,
             validSortFields = {"name", "days"},
             defaultSortBy = "invalid" // This should trigger a validation error
     )
@@ -60,8 +60,8 @@ public class TestController {
     }
 
     private static void logPageRequest(PageSortRequest pageSortRequest) {
-        log.info("Received request with page={}, size={}, sortBy={}, sortDir={}",
-                pageSortRequest.page(), pageSortRequest.size(),
+        log.info("Received request with offset={}, limit={}, sortBy={}, sortDir={}",
+                pageSortRequest.offset(), pageSortRequest.limit(),
                 pageSortRequest.sortBy(), pageSortRequest.sortDir());
     }
 }

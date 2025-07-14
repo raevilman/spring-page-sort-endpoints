@@ -9,13 +9,13 @@ import java.lang.annotation.Target;
  * Annotation to configure and validate pagination and sorting query parameters.
  * <p>
  * This annotation is used on controller methods that accept a {@link PageSortRequest}
- * parameter. It defines constraints and default values for page number, page size,
+ * parameter. It defines constraints and default values for offset, limit,
  * and valid sort fields.
  * <p>
  * When applied to a controller method, the {@link PageSortArgumentResolver} will:
  * <ul>
- *   <li>Validate that page number is not less than {@code minPage}</li>
- *   <li>Validate that page size is between {@code minSize} and {@code maxSize}</li>
+ *   <li>Validate that offset is not less than {@code minOffset}</li>
+ *   <li>Validate that limit is between {@code minLimit} and {@code maxLimit}</li>
  *   <li>Verify that the requested sort field is in the list of {@code validSortFields}</li>
  *   <li>Apply default values when parameters are missing or invalid</li>
  * </ul>
@@ -29,42 +29,42 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PageSortConfig {
     /**
-     * Minimum allowed page number (0-based indexing).
-     * Requests with page less than this value will result in a 400 Bad Request.
+     * Minimum allowed offset (0-based indexing).
+     * Requests with offset less than this value will result in a 400 Bad Request.
      *
-     * @return minimum page number (default: 0)
+     * @return minimum offset (default: 0)
      */
-    int minPage() default 0;
+    int minOffset() default 0;
 
     /**
-     * Default page number to use when not specified in the request.
+     * Default offset to use when not specified in the request.
      *
-     * @return default page number (default: 0)
+     * @return default offset (default: 0)
      */
-    int defaultPage() default 0;
+    int defaultOffset() default 0;
 
     /**
-     * Minimum allowed page size.
-     * Requests with size less than this value will result in a 400 Bad Request.
+     * Minimum allowed limit.
+     * Requests with limit less than this value will result in a 400 Bad Request.
      *
-     * @return minimum page size (default: 1)
+     * @return minimum limit (default: 1)
      */
-    int minSize() default 1;
+    int minLimit() default 1;
 
     /**
-     * Maximum allowed page size.
-     * Requests with size greater than this value will result in a 400 Bad Request.
+     * Maximum allowed limit.
+     * Requests with limit greater than this value will result in a 400 Bad Request.
      *
-     * @return maximum page size (default: 100)
+     * @return maximum limit (default: 100)
      */
-    int maxSize() default 100;
+    int maxLimit() default 100;
 
     /**
-     * Default page size to use when not specified in the request.
+     * Default limit to use when not specified in the request.
      *
-     * @return default page size (default: 25)
+     * @return default limit (default: 25)
      */
-    int defaultSize() default 25;
+    int defaultLimit() default 25;
 
     /**
      * List of field names that can be used for sorting.
