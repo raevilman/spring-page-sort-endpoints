@@ -7,28 +7,28 @@ import java.util.Set;
  * <p>
  * This constructor ensures:
  * <ul>
- *   <li>Page number is not negative (defaults to {@value #PAGE_DEFAULT} if negative)</li>
- *   <li>Page size is positive (defaults to {@value #SIZE_DEFAULT} if zero or negative)</li>
+ *   <li>Offset is not negative (defaults to {@value #OFFSET_DEFAULT} if negative)</li>
+ *   <li>Limit is positive (defaults to {@value #LIMIT_DEFAULT} if zero or negative)</li>
  *   <li>Sort direction is valid (defaults to "asc" if null, blank, or invalid)</li>
  * </ul>
  * <p>
  * The constructor normalizes the sort direction to lowercase when valid.
  *
- * @param page    The page number (0-based)
- * @param size    The number of items per page
+ * @param offset  The offset (0-based)
+ * @param limit   The number of items to return
  * @param sortBy  The field to sort by
  * @param sortDir The direction of sorting (asc or desc, case-insensitive)
  */
 public record PageSortRequest(
-        int page,
-        int size,
+        int offset,
+        int limit,
         String sortBy,
         // Don't make enums for sort direction as it would require custom conversion from query params. Lets keep it simple.
         String sortDir
 ) {
     private static final Set<String> VALID_SORT_DIRECTIONS = Set.of("asc", "desc");
-    private static final int PAGE_DEFAULT = 0;
-    private static final int SIZE_DEFAULT = 25;
+    private static final int OFFSET_DEFAULT = 0;
+    private static final int LIMIT_DEFAULT = 25;
     private static final String SORT_DIR_DEFAULT = "asc";
 
     /**
@@ -36,22 +36,22 @@ public record PageSortRequest(
      * <p>
      * This constructor ensures:
      * <ul>
-     *   <li>Page number is not negative (defaults to {@value #PAGE_DEFAULT} if negative)</li>
-     *   <li>Page size is positive (defaults to {@value #SIZE_DEFAULT} if zero or negative)</li>
+     *   <li>Offset is not negative (defaults to {@value #OFFSET_DEFAULT} if negative)</li>
+     *   <li>Limit is positive (defaults to {@value #LIMIT_DEFAULT} if zero or negative)</li>
      *   <li>Sort direction is valid (defaults to "asc" if null, blank, or invalid)</li>
      * </ul>
      * <p>
      * The constructor normalizes the sort direction to lowercase when valid.
      *
-     * @param page    The page number (0-based)
-     * @param size    The number of items per page
+     * @param offset  The offset (0-based)
+     * @param limit   The number of items to return
      * @param sortBy  The field to sort by
      * @param sortDir The direction of sorting (asc or desc, case-insensitive)
      */
     public PageSortRequest {
         // Default values
-        if (page < 0) page = PAGE_DEFAULT;
-        if (size <= 0) size = SIZE_DEFAULT;
+        if (offset < 0) offset = OFFSET_DEFAULT;
+        if (limit <= 0) limit = LIMIT_DEFAULT;
         // Default/validation for sortDir
         if (sortDir == null || sortDir.isBlank() || !isValidSortDirection(sortDir)) {
             sortDir = "asc";
@@ -65,14 +65,14 @@ public record PageSortRequest(
      * <p>
      * Default values are:
      * <ul>
-     *   <li>page = {@value #PAGE_DEFAULT}</li>
-     *   <li>size = {@value #SIZE_DEFAULT}</li>
+     *   <li>offset = {@value #OFFSET_DEFAULT}</li>
+     *   <li>limit = {@value #LIMIT_DEFAULT}</li>
      *   <li>sortBy = null</li>
      *   <li>sortDir = {@value #SORT_DIR_DEFAULT}</li>
      * </ul>
      */
     public PageSortRequest() {
-        this(PAGE_DEFAULT, SIZE_DEFAULT, null, SORT_DIR_DEFAULT);
+        this(OFFSET_DEFAULT, LIMIT_DEFAULT, null, SORT_DIR_DEFAULT);
     }
 
     /**

@@ -23,7 +23,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Getter
 public class PageSortValidationException extends ResponseStatusException {
     /**
-     * The name of the field that failed validation (e.g., "page", "size", "sortBy", "sortDir").
+     * The name of the field that failed validation (e.g., "offset", "limit", "sortBy", "sortDir").
      * May be null if the specific field is not identified.
      */
     private final String field;
@@ -50,7 +50,7 @@ public class PageSortValidationException extends ResponseStatusException {
      * Constructs a new exception with detailed information about the validation failure.
      *
      * @param message detailed error message explaining the validation failure
-     * @param field the name of the parameter that failed validation (e.g., "page", "size")
+     * @param field the name of the parameter that failed validation (e.g., "offset", "limit")
      * @param value the invalid value that was provided
      */
     public PageSortValidationException(String message, String field, String value) {

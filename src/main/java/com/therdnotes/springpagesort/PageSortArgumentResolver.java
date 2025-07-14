@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
  * <p>
  * The resolver handles the following request parameters:
  * <ul>
- *   <li>{@code page} - The page number (0-based)</li>
- *   <li>{@code size} - The number of items per page</li>
+ *   <li>{@code offset} - The offset (0-based)</li>
+ *   <li>{@code limit} - The number of items to return</li>
  *   <li>{@code sortBy} - The field to sort by</li>
  *   <li>{@code sortDir} - The sort direction ("asc" or "desc")</li>
  * </ul>
@@ -93,34 +93,43 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
 
         if (pageSortConfig != null) {
             log.debug("Found @PageSortConfig annotation on method: {}", method.getName());
-            log.trace("PageSortConfig values: defaultPage={}, defaultSize={}, minPage={}, minSize={}, maxSize={}, defaultSortBy={}, validSortFields={}",
-                    pageSortConfig.defaultPage(), pageSortConfig.defaultSize(),
-                    pageSortConfig.minPage(), pageSortConfig.minSize(),
-                    pageSortConfig.maxSize(), pageSortConfig.defaultSortBy(),
+
+            log.trace("PageSortConfig values: defaultOffset={}, defaultLimit={}, minOffset={}, minLimit={}, maxLimit={}, defaultSortBy={}, validSortFields={}",
+                    pageSortConfig.defaultOffset(), pageSortConfig.defaultLimit(),
+                    pageSortConfig.minOffset(), pageSortConfig.minLimit(),
+                    pageSortConfig.maxLimit(), pageSortConfig.defaultSortBy(),
+
                     Arrays.toString(pageSortConfig.validSortFields()));
         } else {
             log.debug("No @PageSortConfig annotation found, using default values");
         }
 
         // Default values
-        int defaultPage = pageSortConfig != null ? pageSortConfig.defaultPage() : 0;
-        int defaultSize = pageSortConfig != null ? pageSortConfig.defaultSize() : 25;
+
+        int defaultOffset = pageSortConfig != null ? pageSortConfig.defaultOffset() : 0;
+        int defaultLimit = pageSortConfig != null ? pageSortConfig.defaultLimit() : 25;
         String defaultSortBy = pageSortConfig != null ? pageSortConfig.defaultSortBy() : null;
 
-        log.debug("Using defaults: defaultPage={}, defaultSize={}, defaultSortBy={}",
-                defaultPage, defaultSize, defaultSortBy);
+        log.debug("Using defaults: defaultOffset={}, defaultLimit={}, defaultSortBy={}",
+                defaultOffset, defaultLimit, defaultSortBy);
 
         // Parse request parameters
-        String pageParam = webRequest.getParameter("page");
-        String sizeParam = webRequest.getParameter("size");
-        String sortByParam = webRequest.getParameter("sortBy");
-        String sortDirParam = webRequest.getParameter("sortDir");
+        String offsetStr = webRequest.getParameter("offset");
+        String limitStr = webRequest.getParameter("limit");
+        String sortBy = webRequest.getParameter("sortBy");
+        String sortDir = webRequest.getParameter("sortDir");
 
-        log.debug("Request parameters: page={}, size={}, sortBy={}, sortDir={}",
-                pageParam, sizeParam, sortByParam, sortDirParam);
+        log.debug("Request parameters: offset={}, limit={}, sortBy={}, sortDir={}",
+                offsetStr, limitStr, sortBy, sortDir);
 
-        int page = defaultPage;
-        int size = defaultSize;
+        int offset = defaultOffset;
+        int limit = defaultLimit;
+
+        // Apply defaultSortBy when sortByParam is not provided
+        if (!StringUtils.hasText(sortBy) && StringUtils.hasText(defaultSortBy)) {
+            sortBy = defaultSortBy;
+            log.debug("Using default sort field: {}", sortBy);
+        }
 
         // Apply defaultSortBy when sortByParam is not provided
         if (!StringUtils.hasText(sortByParam) && StringUtils.hasText(defaultSortBy)) {
@@ -129,33 +138,33 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
         }
 
         try {
-            if (pageParam != null && !pageParam.isEmpty()) {
-                page = Integer.parseInt(pageParam);
-                log.debug("Parsed page parameter: {}", page);
+            if (offsetStr != null && !offsetStr.isEmpty()) {
+                offset = Integer.parseInt(offsetStr);
+                log.debug("Parsed offset parameter: {}", offset);
             }
         } catch (NumberFormatException e) {
-            log.error("Invalid page parameter: '{}'.", pageParam);
-            throw new PageSortValidationException("Invalid page parameter: " + pageParam);
+            log.error("Invalid offset parameter: '{}'.", offsetStr);
+            throw new PageSortValidationException("Invalid offset parameter: " + offsetStr);
         }
 
         try {
-            if (sizeParam != null && !sizeParam.isEmpty()) {
-                size = Integer.parseInt(sizeParam);
-                log.debug("Parsed size parameter: {}", size);
+            if (limitStr != null && !limitStr.isEmpty()) {
+                limit = Integer.parseInt(limitStr);
+                log.debug("Parsed limit parameter: {}", limit);
             }
         } catch (NumberFormatException e) {
-            log.error("Invalid size parameter: '{}'.", sizeParam);
-            throw new PageSortValidationException("Invalid size parameter: " + sizeParam);
+            log.error("Invalid limit parameter: '{}'.", limitStr);
+            throw new PageSortValidationException("Invalid limit parameter: " + limitStr);
         }
 
         // Apply validation if the annotation is present
         if (pageSortConfig != null) {
             log.debug("Validating parameters using @PageSortConfig constraints");
             try {
-                validatePage(page, pageSortConfig.minPage());
-                validateSize(size, pageSortConfig.minSize(), pageSortConfig.maxSize());
-                validateSortBy(sortByParam, pageSortConfig.validSortFields());
-                validateSortDir(sortDirParam);
+                validateOffset(offset, pageSortConfig.minOffset());
+                validateLimit(limit, pageSortConfig.minLimit(), pageSortConfig.maxLimit());
+                validateSortBy(sortBy, pageSortConfig.validSortFields());
+                validateSortDir(sortDir);
                 log.debug("All pagination parameters are valid");
             } catch (PageSortValidationException e) {
                 log.error("Validation error: {}", e.getMessage());
@@ -163,44 +172,46 @@ public class PageSortArgumentResolver implements HandlerMethodArgumentResolver {
             }
         }
 
-        PageSortRequest request = new PageSortRequest(page, size, sortByParam, sortDirParam);
-        log.info("Created PageSortRequest: page={}, size={}, sortBy={}, sortDir={}",
-                request.page(), request.size(), request.sortBy(), request.sortDir());
+        PageSortRequest request = new PageSortRequest(offset, limit, sortBy, sortDir);
+        log.info("Created PageSortRequest: offset={}, limit={}, sortBy={}, sortDir={}",
+                request.offset(), request.limit(), request.sortBy(), request.sortDir());
         return request;
     }
 
     /**
-     * Validates that the page number is not less than the minimum allowed value.
+     * Validates that the offset is not less than the minimum allowed value.
      *
-     * @param page    the page number to validate
-     * @param minPage the minimum allowed page number
-     * @throws PageSortValidationException if the page number is less than the minimum
+
+     * @param offset    the offset to validate
+     * @param minOffset the minimum allowed offset
+     * @throws PageSortValidationException if the offset is less than the minimum
+
      */
-    private void validatePage(int page, int minPage) {
-        log.trace("Validating page={} against minPage={}", page, minPage);
-        if (page < minPage) {
-            log.warn("Invalid page number: {} is less than minimum: {}", page, minPage);
-            throw new PageSortValidationException("Page number cannot be less than " + minPage);
+    private void validateOffset(int offset, int minOffset) {
+        log.trace("Validating offset={} against minOffset={}", offset, minOffset);
+        if (offset < minOffset) {
+            log.warn("Invalid offset: {} is less than minimum: {}", offset, minOffset);
+            throw new PageSortValidationException("Offset cannot be less than " + minOffset);
         }
     }
 
     /**
-     * Validates that the page size is within the allowed range.
+     * Validates that the limit is within the allowed range.
      *
-     * @param size    the page size to validate
-     * @param minSize the minimum allowed page size
-     * @param maxSize the maximum allowed page size
-     * @throws PageSortValidationException if the page size is outside the allowed range
+     * @param limit    the limit to validate
+     * @param minLimit the minimum allowed limit
+     * @param maxLimit the maximum allowed limit
+     * @throws PageSortValidationException if the limit is outside the allowed range
      */
-    private void validateSize(int size, int minSize, int maxSize) {
-        log.trace("Validating size={} against minSize={}, maxSize={}", size, minSize, maxSize);
-        if (size < minSize) {
-            log.warn("Invalid page size: {} is less than minimum: {}", size, minSize);
-            throw new PageSortValidationException("Page size cannot be less than " + minSize);
+    private void validateLimit(int limit, int minLimit, int maxLimit) {
+        log.trace("Validating limit={} against minLimit={}, maxLimit={}", limit, minLimit, maxLimit);
+        if (limit < minLimit) {
+            log.warn("Invalid limit: {} is less than minimum: {}", limit, minLimit);
+            throw new PageSortValidationException("Limit cannot be less than " + minLimit);
         }
-        if (size > maxSize) {
-            log.warn("Invalid page size: {} is greater than maximum: {}", size, maxSize);
-            throw new PageSortValidationException("Page size cannot be greater than " + maxSize);
+        if (limit > maxLimit) {
+            log.warn("Invalid limit: {} is greater than maximum: {}", limit, maxLimit);
+            throw new PageSortValidationException("Limit cannot be greater than " + maxLimit);
         }
     }
 

@@ -20,27 +20,27 @@ public class PageSortEndpointTest {
     MockMvc mockMvc;
 
     @Test
-    void defaultPageAndSizeValues() throws Exception {
+    void defaultOffsetAndLimitValues() throws Exception {
         mockMvc.perform(get("/items"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.size").value(12));
+                .andExpect(jsonPath("$.offset").value(0))
+                .andExpect(jsonPath("$.limit").value(12));
     }
 
     @Test
-    void customPageAndSizeValues() throws Exception {
-        mockMvc.perform(get("/items?page=2&size=5"))
+    void customOffsetAndLimitValues() throws Exception {
+        mockMvc.perform(get("/items?offset=2&limit=5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(2))
-                .andExpect(jsonPath("$.size").value(5));
+                .andExpect(jsonPath("$.offset").value(2))
+                .andExpect(jsonPath("$.limit").value(5));
     }
 
     @Test
     void sortByNameAscending() throws Exception {
         mockMvc.perform(get("/items?sortBy=name&sortDir=asc"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.size").value(12))
+                .andExpect(jsonPath("$.offset").value(0))
+                .andExpect(jsonPath("$.limit").value(12))
                 .andExpect(jsonPath("$.sortBy").value("name"))
                 .andExpect(jsonPath("$.sortDir").value("asc"));
     }
@@ -49,8 +49,8 @@ public class PageSortEndpointTest {
     void sortByDaysDescending() throws Exception {
         mockMvc.perform(get("/items?sortBy=days&sortDir=desc"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.size").value(12))
+                .andExpect(jsonPath("$.offset").value(0))
+                .andExpect(jsonPath("$.limit").value(12))
                 .andExpect(jsonPath("$.sortBy").value("days"))
                 .andExpect(jsonPath("$.sortDir").value("desc"));
     }
@@ -70,32 +70,32 @@ public class PageSortEndpointTest {
     }
 
     @Test
-    void veryLargeSizeShouldBeCapped() throws Exception {
-        mockMvc.perform(get("/items?size=1000"))
+    void veryLargeLimitShouldBeCapped() throws Exception {
+        mockMvc.perform(get("/items?limit=1000"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("Page size cannot be greater than 12"));
+                .andExpect(jsonPath("$.detail").value("Limit cannot be greater than 12"));
     }
 
     @Test
-    void negativePageShouldBeHandledGracefully() throws Exception {
-        mockMvc.perform(get("/items?page=-1"))
+    void negativeOffsetShouldBeHandledGracefully() throws Exception {
+        mockMvc.perform(get("/items?offset=-1"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("Page number cannot be less than 0"));
+                .andExpect(jsonPath("$.detail").value("Offset cannot be less than 0"));
     }
 
     @Test
-    void zeroOrNegativeSizeShouldBeHandledGracefully() throws Exception {
-        mockMvc.perform(get("/items?size=0"))
+    void zeroOrNegativeLimitShouldBeHandledGracefully() throws Exception {
+        mockMvc.perform(get("/items?limit=0"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("Page size cannot be less than 1"));
+                .andExpect(jsonPath("$.detail").value("Limit cannot be less than 1"));
     }
 
     @Test
-    void defaultSortShouldWorkWhenOnlySizeProvided() throws Exception {
-        mockMvc.perform(get("/items?size=5"))
+    void defaultSortShouldWorkWhenOnlyLimitProvided() throws Exception {
+        mockMvc.perform(get("/items?limit=5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.offset").value(0))
+                .andExpect(jsonPath("$.limit").value(5))
                 .andExpect(jsonPath("$.sortBy").doesNotExist());
     }
 
@@ -108,17 +108,17 @@ public class PageSortEndpointTest {
     }
 
     @Test
-    void nonNumericPageParameterShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(get("/items?page=abc"))
+    void nonNumericOffsetParameterShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/items?offset=abc"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("Invalid page parameter: abc"));
+                .andExpect(jsonPath("$.detail").value("Invalid offset parameter: abc"));
     }
 
     @Test
-    void nonNumericSizeParameterShouldReturnBadRequest() throws Exception {
-        mockMvc.perform(get("/items?size=abc"))
+    void nonNumericLimitParameterShouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/items?limit=abc"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("Invalid size parameter: abc"));
+                .andExpect(jsonPath("$.detail").value("Invalid limit parameter: abc"));
     }
 
     @Test
@@ -146,10 +146,10 @@ public class PageSortEndpointTest {
 
     @Test
     void noSortEndpointShouldAcceptPagination() throws Exception {
-        mockMvc.perform(get("/items/no-sort?page=1&size=5"))
+        mockMvc.perform(get("/items/no-sort?offset=1&limit=5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(1))
-                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.offset").value(1))
+                .andExpect(jsonPath("$.limit").value(5))
                 .andExpect(jsonPath("$.sortBy").doesNotExist());
     }
 
@@ -164,8 +164,8 @@ public class PageSortEndpointTest {
     void defaultSortByTest() throws Exception {
         mockMvc.perform(get("/items/default-sort"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.size").value(12))
+                .andExpect(jsonPath("$.offset").value(0))
+                .andExpect(jsonPath("$.limit").value(12))
                 .andExpect(jsonPath("$.sortBy").value("name"))
                 .andExpect(jsonPath("$.sortDir").value("asc"));
     }
@@ -197,19 +197,19 @@ public class PageSortEndpointTest {
 
     @Test
     void parameterOrderShouldNotMatter() throws Exception {
-        mockMvc.perform(get("/items?sortDir=desc&size=5&sortBy=days&page=1"))
+        mockMvc.perform(get("/items?sortDir=desc&limit=5&sortBy=days&offset=1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(1))
-                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.offset").value(1))
+                .andExpect(jsonPath("$.limit").value(5))
                 .andExpect(jsonPath("$.sortBy").value("days"))
                 .andExpect(jsonPath("$.sortDir").value("desc"));
     }
 
     @Test
     void multipleValuesForSameParameterShouldUseFirst() throws Exception {
-        mockMvc.perform(get("/items?page=1&page=2"))
+        mockMvc.perform(get("/items?offset=1&offset=2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.page").value(1));
+                .andExpect(jsonPath("$.offset").value(1));
     }
 
 
